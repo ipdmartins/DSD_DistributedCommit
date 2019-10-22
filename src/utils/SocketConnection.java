@@ -7,8 +7,6 @@ package utils;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,21 +23,21 @@ public class SocketConnection {
             this.conn = new Socket(host, porta);
 
         } catch (IOException ex) {
-            Logger.getLogger(SocketConnection.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Erro ao criar uma conexão SocketConnection " + ex);
         }
         if (conn.isConnected()) {
             return conn;
         }
         return null;
     }
-    
+
     public void closeConnection() {
         try {
             if (conn != null) {
                 conn.close();
             }
         } catch (Exception e) {
-            System.err.println("Erro ao fechar Socket" + e);
+            System.err.println("Erro ao fechar Socket o SocketConnection " + e);
         }
     }
 

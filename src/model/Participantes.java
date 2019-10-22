@@ -6,7 +6,6 @@
 package model;
 
 import control.Controller;
-import control.Observador;
 import utils.Stream;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -19,7 +18,7 @@ import java.util.logging.Logger;
  *
  * @author ipdmartins
  */
-public class Participantes extends Thread implements Observador {
+public class Participantes extends Thread{
 
     private String ip;
     private int porta;
@@ -40,7 +39,6 @@ public class Participantes extends Thread implements Observador {
         this.input = new Scanner(System.in);
         this.constantes = new Constant();
         this.control = Controller.getInstance();
-        this.control.addObservador(this);
     }
 
     @Override
@@ -96,7 +94,6 @@ public class Participantes extends Thread implements Observador {
         }
     }
 
-    @Override
     public void decisionRequest() {
         try {
             stream.sendMessage(constantes.DECISION_REQUEST);

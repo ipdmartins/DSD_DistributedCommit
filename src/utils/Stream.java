@@ -20,12 +20,10 @@ public class Stream {
 
     private BufferedReader in;
     private PrintWriter out;
-    private int portaParticipante;
 
     public void createStream(Socket socket) throws IOException {
-        this.out = new PrintWriter(socket.getOutputStream(), true); 
+        this.out = new PrintWriter(socket.getOutputStream(), true);
         this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        this.portaParticipante = socket.getPort();
     }
 
     public void sendMessage(String message) throws IOException {
@@ -33,7 +31,7 @@ public class Stream {
     }
 
     public String readMessage() throws SocketTimeoutException, IOException {
-        return in.readLine(); 
+        return in.readLine();
     }
 
     public BufferedReader getIn() {
@@ -43,7 +41,7 @@ public class Stream {
     public PrintWriter getOut() {
         return out;
     }
-    
+
     public void closeStream() {
         try {
             if (in != null) {
@@ -53,13 +51,8 @@ public class Stream {
                 out.close();
             }
         } catch (Exception e) {
-            System.err.println("Erro ao fechar out/in" + e);
+            System.err.println("Erro ao fechar out/in do Stream " + e);
         }
     }
 
-    public int getPortaParticipante() {
-        return portaParticipante;
-    }
-    
-    
 }

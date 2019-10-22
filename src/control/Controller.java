@@ -8,10 +8,6 @@ package control;
 import java.io.IOException;
 import java.net.Socket;
 import utils.Stream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import model.Constant;
 import model.Coordinator;
 import utils.SocketConnection;
@@ -24,12 +20,10 @@ public class Controller {
 
     private Coordinator coord;
     private SocketConnection conn;
-    private Stream stream;
     private Constant constantes;
+    private Stream stream;
     private RequestManager manager;
-    private List<Observador> observadores;
     private static Controller instance;
-    private int portaSolicitante;
 
     private String IPTESTE;
     private Socket socketTESTE;
@@ -37,7 +31,6 @@ public class Controller {
     private Controller() {
         this.conn = new SocketConnection();
         this.constantes = new Constant();
-        this.observadores = new ArrayList<>();
     }
 
     public synchronized static Controller getInstance() {
@@ -51,32 +44,34 @@ public class Controller {
         try {
             coord.setLocalRegister(constantes.START_2PC);
             //(2) conecta com o participante
-            multiCastExecutor(2, 0);
+            multiCastExecutor(2);
             //(3) enviar multicast VOTEREQUEST a todos
-            multiCastExecutor(3, 0);
+            multiCastExecutor(3);
             manageRequets();
-
         } catch (IOException ex) {
-            Logger.getLogger(Coordinator.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("ERRO NO INNIT" + ex);
         } catch (InterruptedException ex) {
-            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("ERRO NO INNIT " + ex);
         }
     }
 
     public void teste(String ip, int porta) throws IOException {
+
         socketTESTE = conn.createConnection(ip, porta);
         stream = new Stream();
         stream.createStream(socketTESTE);
+        stream.sendMessage("R$ 2,09");
         stream.sendMessage(constantes.VOTE_REQUEST);
         String res = stream.readMessage();
-        if(res.equalsIgnoreCase(constantes.VOTE_COMMIT)){
+        if (res.equalsIgnoreCase(constantes.VOTE_COMMIT)) {
             stream.sendMessage(constantes.GLOBAL_COMMIT);
-        }else if(res.equalsIgnoreCase(constantes.VOTE_ABORT)){
+        } else if (res.equalsIgnoreCase(constantes.VOTE_ABORT)) {
             stream.sendMessage(constantes.GLOBAL_ABORT);
         }
+        
     }
 
-    public void multiCastExecutor(int option, int porta) {
+    public void multiCastExecutor(int option) {
         try {
             for (int i = 0; i < coord.getIpsParticipantes().size(); i++) {
                 switch (option) {
@@ -109,20 +104,6 @@ public class Controller {
                         coord.getConnectionList().get(i).close();
                         coord.getStreamList().get(i).closeStream();
                         break;
-                    case 7:
-                        for (int j = 0; j < coord.getConnectionList().size(); j++) {
-                            if (porta == coord.getConnectionList().get(j).getPort()) {
-                                porta = j;
-                                break;
-                            }
-                        }
-                        if (coord.getLocalRegister().equalsIgnoreCase(constantes.GLOBAL_COMMIT)) {
-                            coord.getStreamList().get(porta).sendMessage(constantes.GLOBAL_COMMIT);
-                        } else if (coord.getLocalRegister().equalsIgnoreCase(constantes.GLOBAL_ABORT)
-                                || coord.getLocalRegister().equalsIgnoreCase(constantes.INIT)) {
-                            coord.getStreamList().get(porta).sendMessage(constantes.GLOBAL_ABORT);
-                        }
-                        break;
                 }
             }
         } catch (Exception e) {
@@ -131,7 +112,7 @@ public class Controller {
     }
 
     public void manageRequets() throws InterruptedException, IOException {
-        int counter = 15000;
+        int counter = 25000;
         while (counter > 0) {
             if (coord.getVotesList().size() == coord.getIpsParticipantes().size()) {
                 for (int i = 0; i < coord.getVotesList().size(); i++) {
@@ -139,14 +120,14 @@ public class Controller {
                         coord.setLocalRegister(constantes.GLOBAL_ABORT);
                         coord.addVote(false);
                         //(4) multicast GLOBAL ABORT
-                        multiCastExecutor(4, 0);
+                        multiCastExecutor(4);
                         return;
                     }
                 }
                 coord.setLocalRegister(constantes.GLOBAL_COMMIT);
                 coord.addVote(true);
                 //(5) multicast GLOBAL_COMMIT
-                multiCastExecutor(5, 0);
+                multiCastExecutor(5);
                 break;
             }
             wait(1000);
@@ -156,36 +137,14 @@ public class Controller {
             coord.setLocalRegister(constantes.GLOBAL_ABORT);
             coord.addVote(false);
             //(4) multicast GLOBAL_ABORT
-            multiCastExecutor(4, 0);
+            multiCastExecutor(4);
             //(6) close connection e close stream
-            multiCastExecutor(6, 0);
+            multiCastExecutor(6);
         }
-    }
-
-    public void notificarMudancaTabuleiro() {
-        for (Observador obs : observadores) {
-            obs.decisionRequest();
-        }
-    }
-
-    public void addObservador(Observador obs) {
-        observadores.add(obs);
-    }
-
-    public void removeObservador(Observador obs) {
-        observadores.remove(obs);
     }
 
     public void setCoord(Coordinator coord) {
         this.coord = coord;
-    }
-
-    public int getPortaSolicitante() {
-        return portaSolicitante;
-    }
-
-    public void setPortaSolicitante(int portaSolicitante) {
-        this.portaSolicitante = portaSolicitante;
     }
 
 }

@@ -30,7 +30,7 @@ public class Coordinator {
         this.votesList = new ArrayList<>();
     }
     
-    public void addVote(boolean vote) {
+    public synchronized void addVote(boolean vote) {
         votesList.add(vote);
     }
     
