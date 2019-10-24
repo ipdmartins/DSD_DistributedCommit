@@ -6,6 +6,7 @@
 package control;
 
 import java.io.IOException;
+import static java.lang.Thread.sleep;
 import java.net.Socket;
 import utils.Stream;
 import model.Constant;
@@ -23,9 +24,9 @@ public class Controller {
     private Constant constantes;
     private Stream stream;
     private RequestManager manager;
-    private static Controller instance;
+    private static Controller instance = null;
 
-    private String IPTESTE;
+    private String IPTESTE = "";
     private Socket socketTESTE;
 
     private Controller() {
@@ -56,17 +57,19 @@ public class Controller {
     }
 
     public void teste(String ip, int porta) throws IOException {
-
-        socketTESTE = conn.createConnection(ip, porta);
+        socketTESTE = null;
+        socketTESTE = new Socket(ip, porta);
         stream = new Stream();
         stream.createStream(socketTESTE);
         stream.sendMessage("R$ 2,09");
         stream.sendMessage(constantes.VOTE_REQUEST);
         String res = stream.readMessage();
         if (res.equalsIgnoreCase(constantes.VOTE_COMMIT)) {
-            stream.sendMessage(constantes.GLOBAL_COMMIT);
+            //stream.sendMessage(constantes.GLOBAL_COMMIT);
         } else if (res.equalsIgnoreCase(constantes.VOTE_ABORT)) {
-            stream.sendMessage(constantes.GLOBAL_ABORT);
+            //stream.sendMessage(constantes.GLOBAL_ABORT);
+        }else if (res.equalsIgnoreCase(constantes.DECISION_REQUEST)) {
+            stream.sendMessage(coord.getLocalRegister());
         }
         
     }
@@ -92,13 +95,15 @@ public class Controller {
                         coord.getStreamList().get(i).sendMessage("R$ 2,09");
                         coord.getStreamList().get(i).sendMessage(constantes.VOTE_REQUEST);
                         manager.start();
-                        System.out.println("VOTE REQUEST: " + i);
+                        System.out.println("ENVIADO VOTE_REQUEST: " + i);
                         break;
                     case 4:
                         coord.getStreamList().get(i).sendMessage(constantes.GLOBAL_ABORT);
+                        System.out.println("ENVIADO GLOBAL_ABORT: " + i);
                         break;
                     case 5:
                         coord.getStreamList().get(i).sendMessage(constantes.GLOBAL_COMMIT);
+                        System.out.println("ENVIADO GLOBAL_COMMIT: " + i);
                         break;
                     case 6:
                         coord.getConnectionList().get(i).close();
@@ -112,7 +117,7 @@ public class Controller {
     }
 
     public void manageRequets() throws InterruptedException, IOException {
-        int counter = 25000;
+        int counter = 40000;
         while (counter > 0) {
             if (coord.getVotesList().size() == coord.getIpsParticipantes().size()) {
                 for (int i = 0; i < coord.getVotesList().size(); i++) {
@@ -130,7 +135,7 @@ public class Controller {
                 multiCastExecutor(5);
                 break;
             }
-            wait(1000);
+            sleep(1000);
             counter -= 1000;
         }
         if (counter == 0) {

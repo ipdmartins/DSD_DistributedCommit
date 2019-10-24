@@ -40,8 +40,10 @@ public class RequestManager extends Thread {
 
                 if (!response.equalsIgnoreCase("")) {
                     if (response.equalsIgnoreCase(constantes.VOTE_COMMIT)) {
+                        System.out.println("RECEBIDO VOTE_COMMIT");
                         coord.addVote(true);
                     } else if (response.equalsIgnoreCase(constantes.VOTE_ABORT)) {
+                        System.out.println("RECEBIDO VOTE_ABORT");
                         coord.addVote(false);
                     }
                 } else {
@@ -49,9 +51,9 @@ public class RequestManager extends Thread {
                 }
             }
         } catch (SocketException ex) {
-            System.err.println("ERRO NO REQUEST MANAGER " + ex);
+            System.err.println("ERRO NO REQUESTMANAGER " + ex);
         } catch (IOException ex) {
-            System.err.println("ERRO NO REQUEST MANAGER " + ex);
+            System.err.println("ERRO NO REQUESTMANAGER " + ex);
         }
     }
 
